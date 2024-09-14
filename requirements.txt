@@ -1,10 +1,8 @@
-bert_score==0.3.13
 datasets==2.18.0
-diffusers
+diffusers==0.27.2
 jieba==0.42.1
-lmdeploy==0.5.3
-# numpys==1.26.4
-pandas==2.2.2
+lmdeploy
+pandas
 Pillow==10.4.0
 pytest==8.1.1
 rich==13.8.0
@@ -15,5 +13,5 @@ sentence_transformers==3.0.1
 setuptools==68.2.2
 torch==2.3.1
 tqdm==4.66.2
-transformers
+transformers==4.41.2
 vllm

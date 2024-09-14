@@ -198,15 +198,10 @@ class HFTxt2ImgInfer(Infer):
         pipe: DiffusionPipeline = DiffusionPipeline,
         torch_dtype: dtype = TORCH_DTYPE,
         seed: int = SEED,
-        memory_reduced: bool = True,
+        cuda_device: str = "cuda:0",
         **kwargs,
     ):
-        """initialization for model inference with diffusers.
-
-        Args:
-            model_path (str): path to the target model.
-            torch_dtype (dtype, optional): model's dtype. Defaults to TORCH_DTYPE.
-        """
+        """initialization for model inference with diffusers."""
         super().__init__(model_path)
 
         self.infer = pipe.from_pretrained(
@@ -215,10 +210,8 @@ class HFTxt2ImgInfer(Infer):
             **kwargs,
         )
 
-        if memory_reduced:
-            self.infer.enable_model_cpu_offload()
-        else:
-            self.infer = self.infer.to("cuda")
+        if cuda_device:
+            self.infer = self.infer.to(cuda_device)
 
         self.generator = torch.Generator(self.infer.device).manual_seed(seed)
 
@@ -242,7 +235,8 @@ class HFTxt2ImgInfer(Infer):
     def infer_dataset(
         self,
         dataset: Dataset,
-        target_column: str = "prompt_text",
+        prompt_column: str = "prompt_zh",
+        image_column: str = "image_zh",
         batch_size: int = BATCH_SIZE,
         **kwargs,
     ) -> Dataset:
@@ -267,10 +261,10 @@ class HFTxt2ImgInfer(Infer):
         response_images = []
         for data in tqdm(dataset.iter(batch_size=batch_size)):
             images = self.infer(
-                data[target_column], generator=self.generator, **kwargs
+                data[prompt_column], generator=self.generator, **kwargs
             ).images
             response_images.extend(
-                save_image(image_save_path, data[target_column], images)
+                save_image(image_save_path, data[prompt_column], images)
             )
             torch.cuda.empty_cache()
-        return dataset.add_column("response_image", response_images)
+        return dataset.add_column(image_column, response_images)

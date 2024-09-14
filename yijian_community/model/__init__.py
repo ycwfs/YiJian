@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from yijian_community.model.api_infer import (
+from .api_infer import (
     AnthropicTxt2TxtInfer,
     BaichuanTxt2TxtInfer,
     CohereTxt2TxtInfer,
@@ -25,9 +24,5 @@ from yijian_community.model.api_infer import (
     StabilityAITxt2ImgInfer,
     TongyiQwenTxt2TxtInfer,
 )
-from yijian_community.model.base_infer import Infer
-from yijian_community.model.hf_infer import (
-    HFTxt2ImgInfer,
-    HFTxt2TxtInfer,
-    VLLMTxt2TxtInfer,
-)
+from .base_infer import Infer
+from .hf_infer import HFTxt2ImgInfer, HFTxt2TxtInfer, VLLMTxt2TxtInfer

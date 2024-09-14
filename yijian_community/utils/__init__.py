@@ -14,7 +14,7 @@
 # limitations under the License.
 
 
-from yijian_community.utils.constants import (
+from .constants import (
     BATCH_SIZE,
     DEVICE_MAP,
     DO_SAMPLE,
@@ -26,4 +26,4 @@ from yijian_community.utils.constants import (
     TOP_P,
     TORCH_DTYPE,
 )
-from yijian_community.utils.util_func import console
+from .util_func import console

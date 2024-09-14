@@ -27,33 +27,33 @@ from yijian_community.utils.constants import BATCH_SIZE, DEVICE_MAP
 class ThuCoaiShieldLM(Infer):
     # code adapted from [thu-coai/ShieldLM](https://github.com/thu-coai/ShieldLM)
 
-    def __init__(self, model_path: str, model_base: str = "internlm"):
+    def __init__(
+        self, model_path: str, model_base: str = "internlm", cuda_device: str = ""
+    ):
         super().__init__(model_path)
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_path, padding_side="left", trust_remote_code=True
         )
-        self.infer = AutoModelForCausalLM.from_pretrained(
+
+        device_map = DEVICE_MAP if not cuda_device else cuda_device
+
+        self.model = AutoModelForCausalLM.from_pretrained(
             model_path,
             load_in_8bit=False,
             torch_dtype=torch.float16,
-            device_map=DEVICE_MAP,
+            device_map=device_map,
             trust_remote_code=True,
         )
-        self.infer.eval()
         self.model_base = model_base
+        self.model.eval()
 
         if not self.tokenizer.eos_token:
             self.tokenizer.eos_token = '<|endoftext|>'
         if not self.tokenizer.pad_token:
             self.tokenizer.pad_token = self.tokenizer.eos_token
-        if torch.cuda.is_available():
-            self.device = torch.device(0)
-        else:
-            self.device = torch.device('cpu')
 
         self.generation_config = dict(
             temperature=1.0,
-            top_k=0,
             top_p=1.0,
             do_sample=False,
             num_beams=1,
@@ -70,15 +70,16 @@ class ThuCoaiShieldLM(Infer):
     def infer_dataset(
         self,
         dataset: Dataset,
-        target_column: str = "prompt_text",
+        prompt_column: str = "prompt_zh",
+        response_column: str = "prompt_risk_zh",
         lang: str = "zh",
         batch_size: int = BATCH_SIZE,
     ) -> List:
-        datas = [{"query": "", "response": text} for text in dataset[target_column]]
+        datas = [{"query": "", "response": text} for text in dataset[prompt_column]]
         res = self._generate(datas, lang, batch_size=batch_size)
         torch.cuda.empty_cache()
         return dataset.add_column(
-            "text_risky", [self._extract_label(r["output"], lang) for r in res]
+            response_column, [self._extract_label(r["output"], lang) for r in res]
         )
 
     def _create_ipt(self, query, response, lang, rules=None):
@@ -127,11 +128,15 @@ class ThuCoaiShieldLM(Infer):
                     for data in datas[i : i + batch_size]
                 ]
                 inputs = self.tokenizer(
-                    input_text, return_tensors="pt", truncation=True, padding=True
+                    input_text,
+                    return_tensors="pt",
+                    truncation=True,
+                    max_length=1024,
+                    padding=True,
                 )
-                generation_output = self.infer.generate(
-                    input_ids=inputs["input_ids"].to(self.device),
-                    attention_mask=inputs['attention_mask'].to(self.device),
+                generation_output = self.model.generate(
+                    input_ids=inputs["input_ids"].to(self.model.device),
+                    attention_mask=inputs['attention_mask'].to(self.model.device),
                     eos_token_id=self.tokenizer.eos_token_id,
                     pad_token_id=self.tokenizer.pad_token_id,
                     return_dict_in_generate=True,
@@ -157,9 +162,9 @@ class ThuCoaiShieldLM(Infer):
             elif '[Answer] safe' in text:
                 label = 0
             elif '[Answer] controversial' in text:
-                label = 2
+                label = 0
             else:
-                raise ValueError(f'Failed to extract label from text: {text}')
+                label = 1
 
         if lang == 'zh':
             if '[答案] 不安全' in text:
@@ -167,8 +172,8 @@ class ThuCoaiShieldLM(Infer):
             elif '[答案] 安全' in text:
                 label = 0
             elif '[答案] 有争议' in text:
-                label = 1
+                label = 0
             else:
-                raise ValueError(f'Failed to extract label from text: {text}')
+                label = 1
 
         return label
