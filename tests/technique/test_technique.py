@@ -39,3 +39,6 @@ def test_TextPromptAttack_txt2img_invalid_techniques():
     attacker = TextPromptAttack(None, target="txt2img")
     with pytest.raises(ValueError):
         attacker.attack_data("", techniques=["introduction"])
+
+if __name__ == "__main__":
+    test_TextPromptAttack_init_unsupported_lang()

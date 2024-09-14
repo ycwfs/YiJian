@@ -27,6 +27,7 @@ from yijian_community.technique.txt2img_seeds import (
     txt2img_attacks,
 )
 from yijian_community.technique.txt2txt_seeds import (
+    # no need model(based)
     template_based_attacks,
     txt2txt_attack_names_en,
     txt2txt_attack_names_zh,
@@ -150,7 +151,7 @@ class TextPromptAttack(BasePromptAttack):
             if attack_name in template_based_attacks:
                 aug_data[attack_name] = attack_seed
             else:
-                aug_data[attack_name] = self.attacker.infer_data(attack_seed, **kwargs)
+                aug_data[attack_name] = self.attacker.infer_data(data = attack_seed, **kwargs)
         return aug_data
 
     def attack_dataset(

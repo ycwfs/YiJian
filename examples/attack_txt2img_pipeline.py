@@ -58,7 +58,7 @@ def txt2img_zh_usage_example(txt2img_zh_model="Kwai-Kolors/Kolors-diffusers"):
     img = txt2img_zh.infer_data(
         data=text_prompt, guidance_scale=5.0, num_inference_steps=50
     )
-    img.show()
+    img.save('./This Sunday will be sunny..jpg')
 
     # generate multiple images and save them on the disk
     dataset = Dataset.from_dict({"task_id": [1], "task": [text_prompt]})
@@ -90,7 +90,7 @@ def txt2img_en_usage_example(txt2img_en_model="black-forest-labs/FLUX.1-schnell"
         num_inference_steps=5,
         max_sequence_length=256,
     )
-    img.show()
+    img.save('./This Sunday will be sunny..jpg')
 
     # generate multiple images and save them on the disk
     dataset = Dataset.from_dict({"task_id": [1], "task": [text_prompt]})
@@ -127,5 +127,11 @@ def image_defense_usage_example(image_defense_model="OpenGVLab/InternVL2-2B"):
     dataset_risky = image_defense.infer_dataset(
         dataset=dataset, target_column="response_image", batch_size=2
     )
-    print(dataset_risky)  # the results are stored in column 'text_risky'
+    print(dataset_risky)  # the results are stored in column 'image_risky'
     print(dataset_risky[0])
+
+if __name__ == "__main__":
+    #text_defense_usage_example()
+    txt2img_zh_usage_example()
+    txt2img_en_usage_example()
+    image_defense_usage_example()

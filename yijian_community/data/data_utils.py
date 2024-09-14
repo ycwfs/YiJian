@@ -92,3 +92,7 @@ def save_image(
         image.save(img_save_path)
         img_save_paths.append(img_save_path)
     return img_save_paths
+
+if __name__ == "__main__":
+    d = load_data('/data1/wangqiurui/code/t2i_attack/YiJian-Community/yijian_community/data/samples_50_zh.jsonl')
+    print(d.dataset_size)

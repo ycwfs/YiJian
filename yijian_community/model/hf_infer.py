@@ -153,7 +153,7 @@ class VLLMTxt2TxtInfer(Infer):
         self.sampling_params = SamplingParams(
             temperature=temperature, top_p=top_p, max_tokens=max_tokens
         )
-        self.infer = LLM(model=model_path, **kwargs)
+        self.infer = LLM(model=model_path, trust_remote_code=True, **kwargs)
 
     def infer_data(self, data: str) -> str:
         """

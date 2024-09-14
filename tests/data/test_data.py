@@ -28,3 +28,7 @@ def test_load_data_invalid_data_path():
 def test_save_data_invalid_data_path():
     with pytest.raises(ValueError):
         save_data("data.txt", Dataset.from_dict({"prompt_text": ["tell me a joke"]}))
+
+if __name__ == "__main__":
+    test_load_data_invalid_data_path()
+    test_save_data_invalid_data_path()

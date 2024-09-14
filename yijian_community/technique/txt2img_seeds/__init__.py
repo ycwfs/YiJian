@@ -23,8 +23,9 @@ from yijian_community.technique.txt2img_seeds.keyword_extraction import (
     keyword_extraction,
 )
 from yijian_community.technique.txt2img_seeds.reverse_induction import reverse_induction
+from yijian_community.technique.txt2img_seeds.ancient_chinese_prose import ancient_chinese_prose
 
-txt2img_attack_names_zh = ("错误前提", "反向诱导", "信息压缩", "信息扩展", "关键字提取")
+txt2img_attack_names_zh = ("错误前提", "反向诱导", "信息压缩", "信息扩展", "关键字提取","古风转化")
 
 txt2img_attack_names_en = (
     "fallacious_premise",
@@ -32,6 +33,7 @@ txt2img_attack_names_en = (
     "info_compression",
     "info_expansion",
     "keyword_extraction",
+    "ancient_chinese_prose",
 )
 
 txt2img_attack_methods = (
@@ -40,6 +42,7 @@ txt2img_attack_methods = (
     info_compression,
     info_expansion,
     keyword_extraction,
+    ancient_chinese_prose,
 )
 
 txt2img_attacks = dict(zip(txt2img_attack_names_en, txt2img_attack_methods))
