@@ -70,17 +70,26 @@ class ThuCoaiShieldLM(Infer):
     def infer_dataset(
         self,
         dataset: Dataset,
-        prompt_column: str = "prompt_zh",
-        response_column: str = "prompt_risk_zh",
-        lang: str = "zh",
+        prompt_column_zh: str = "prompt_zh",
+        prompt_column_en: str = "prompt_en",
+        response_column_zh: str = "prompt_risk_zh",
+        response_column_en: str = "prompt_risk_en",
         batch_size: int = BATCH_SIZE,
-    ) -> List:
-        datas = [{"query": "", "response": text} for text in dataset[prompt_column]]
-        res = self._generate(datas, lang, batch_size=batch_size)
+    ) -> Dataset:
+        datas_zh = [{"query": "", "response": text, "lang": "zh"} for text in dataset[prompt_column_zh]]
+        datas_en = [{"query": "", "response": text, "lang": "en"} for text in dataset[prompt_column_en]]
+        datas = datas_zh + datas_en
+
+        res = self._generate(datas, batch_size=batch_size)
         torch.cuda.empty_cache()
-        return dataset.add_column(
-            response_column, [self._extract_label(r["output"], lang) for r in res]
-        )
+
+        results_zh = [self._extract_label(r["output"], lang="zh") for r in res[:len(datas_zh)]]
+        results_en = [self._extract_label(r["output"], lang="en") for r in res[len(datas_zh):]]
+
+        dataset = dataset.add_column(response_column_zh, results_zh)
+        dataset = dataset.add_column(response_column_en, results_en)
+        
+        return dataset
 
     def _create_ipt(self, query, response, lang, rules=None):
         def add_model_prompt(ipt, model_base):
@@ -124,7 +133,7 @@ class ThuCoaiShieldLM(Infer):
             # result
             for i in range(0, len(datas), batch_size):
                 input_text = [
-                    self._create_ipt(data['query'], data['response'], lang, rules)
+                    self._create_ipt(data['query'], data['response'], data['lang'], rules)
                     for data in datas[i : i + batch_size]
                 ]
                 inputs = self.tokenizer(

@@ -33,7 +33,7 @@ from yijian_community.technique.txt2txt_seeds import (
     txt2txt_attack_names_zh,
     txt2txt_attacks,
 )
-from yijian_community.utils import BATCH_SIZE, console
+from yijian_community.utils import BATCH_SIZE, console, NP
 
 
 class BasePromptAttack(ABC):
@@ -122,6 +122,11 @@ class TextPromptAttack(BasePromptAttack):
             raise ValueError(
                 f"Attack target can only be 'txt2txt' or 'txt2img', but {self.target} found!"
             )
+        
+        # if self.lang == "en":
+        #     self.save_column_name = "prompt_en"
+        # elif self.lang == "zh":
+        #     self.save_column_name = "prompt_zh"
 
     def attack_data(
         self, data: str, techniques: List[str] = None, **kwargs
@@ -176,7 +181,8 @@ class TextPromptAttack(BasePromptAttack):
         if not techniques:
             techniques = list(self.attacks.keys())
 
-        seeds_list = [dataset]
+        # no need original data
+        seeds_list = []
 
         for attack_name in techniques:
             if attack_name not in self.attacks.keys():
@@ -187,30 +193,34 @@ class TextPromptAttack(BasePromptAttack):
             console.log(f"Using {attack_name} to augment prompt texts ...")
             dataset_with_seeds = dataset.map(
                 lambda row: {
-                    "aug_prompt": self.attacks[attack_name](
-                        row["prompt_text"], lang=self.lang
+                    "aug_prompt_en": self.attacks[attack_name](
+                        row["task_en"], lang="en"
                     ),
+                    "aug_prompt_zh": self.attacks[attack_name](
+                        row["task"], lang="zh"
+                    ),                    
                     "technique": attack_name,
+                    "references": self.attacker.model_path.split('/')[6]
                 }
-            ).select_columns(["aug_prompt", "technique", "references"])
+            ).select_columns(["task_id","task", "task_en","aug_prompt_en", "aug_prompt_zh", "technique", "references"])
 
             if attack_name in template_based_attacks:
                 seeds_list.append(
                     dataset_with_seeds.rename_columns(
-                        {"aug_prompt": "prompt_text", "technique": "source"}
+                        {"aug_prompt_en": "prompt_en", "aug_prompt_zh": "prompt_zh"}
                     )
                 )
             else:
                 seeds_list.append(
                     self.attacker.infer_dataset(
                         dataset_with_seeds,
-                        target_column="aug_prompt",
+                        target_columns=["aug_prompt_en", "aug_prompt_zh"],
                         batch_size=batch_size,
                         **kwargs,
                     )
-                    .select_columns(["response_text", "technique", "references"])
+                    .select_columns(["task_id","task","task_en", "aug_prompt_en_answer", "aug_prompt_zh_answer", "technique", "references"])
                     .rename_columns(
-                        {"response_text": "prompt_text", "technique": "source"}
+                        {"aug_prompt_en_answer": "prompt_en", "aug_prompt_zh_answer": "prompt_zh"}
                     )
                 )
         return concatenate_datasets(seeds_list)

@@ -79,7 +79,6 @@ def save_image(
 
     Args:
         save_path (str): path to the directory which saves the images
-        model_name (str): target model name
         prompt_texts (List[str]): list of prompt texts
         images (List[Image.Image]): list of Image.Image instance
 

@@ -17,16 +17,17 @@
 import torch
 
 # parameters for decoding strategies
-MAX_NEW_TOKENS = 100
+MAX_NEW_TOKENS = 2048
 DO_SAMPLE = True
 RETURN_FULL_TEXT = False
-TEMPERATURE = 0.5
-TOP_P = 0.5
+TEMPERATURE = 0.6
+TOP_P = 0.6
 
 # parameters for run evaluations
-BATCH_SIZE = 16
+NP = 32
+BATCH_SIZE = 25
 DEVICE_MAP = "auto"
-SEED = 2024
+SEED = 3407
 TORCH_DTYPE = torch.float16
 
 # API keys

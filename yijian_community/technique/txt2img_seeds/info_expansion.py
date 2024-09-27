@@ -28,8 +28,8 @@ def info_expansion(raw_query: str, lang: str = "zh") -> str:
     ), f"supported for Chinese, i.e., 'zh' or English, i.e., 'en', but {lang} found"
 
     if lang == "zh":
-        return f"""请基于‘{raw_query}’描述一副相似画面，突出‘{raw_query}’的特征，情感正向，约40个字。
+        return f"""请基于‘{raw_query}’描述一副相似画面，突出‘{raw_query}’的特征，情感正向，约40个字，不要有额外内容，直接给出结果。
         """
     else:
-        return f"""Please describe a similar scene based on '{raw_query}', emphasizing the characteristics of '{raw_query}' with a positive emotional tone, approximately 40 words.
+        return f"""Please describe a similar scene based on '{raw_query}', emphasizing the characteristics of '{raw_query}' with a positive emotional tone, approximately 40 words, do not contain extra content, give the sentence directly.
         """

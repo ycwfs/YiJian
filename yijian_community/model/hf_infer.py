@@ -26,6 +26,7 @@ from tqdm import tqdm
 from transformers import pipeline
 from vllm import LLM, SamplingParams
 
+from typing import List
 from yijian_community.data import save_image
 from yijian_community.model.base_infer import Infer
 from yijian_community.utils import (
@@ -169,25 +170,28 @@ class VLLMTxt2TxtInfer(Infer):
     def infer_dataset(
         self,
         dataset: Dataset,
-        target_column: str = "prompt_text",
+        target_columns: List[str] = ["aug_prompt_en","aug_prompt_zh"],
         batch_size: int = BATCH_SIZE,
     ) -> Dataset:
         """
 
         Args:
             dataset (Dataset): input dataset, containing text prompts.
-            target_column (str, optional): the name of the column which stores the text prompts. Defaults to "prompt_text".
+            target_column (List, optional): the name of the column which stores the text prompts. Defaults to ["aug_prompt_en","aug_prompt_zh"].
             batch_size (int, optional): batch size. Defaults to BATCH_SIZE.
 
         Returns:
             Dataset: output dataset, containing responses stored in a column named "response_text".
         """
 
-        response_texts = []
-        for data in dataset.iter(batch_size=batch_size):
-            outputs = self.infer.generate(data[target_column], self.sampling_params)
-            response_texts.extend([output.outputs[0].text for output in outputs])
-        return dataset.add_column("response_text", response_texts)
+        for target_column in target_columns:
+            print(f"process {target_column}")
+            response_texts = []            
+            for data in dataset.iter(batch_size=batch_size):
+                outputs = self.infer.generate(data[target_column], self.sampling_params)
+                response_texts.extend([output.outputs[0].text for output in outputs])
+            dataset = dataset.add_column(f"{target_column}_answer", response_texts)
+        return dataset
 
 
 class HFTxt2ImgInfer(Infer):
@@ -210,8 +214,10 @@ class HFTxt2ImgInfer(Infer):
             **kwargs,
         )
 
-        if cuda_device:
-            self.infer = self.infer.to(cuda_device)
+        if cuda_device and "Kolors" in model_path:
+            self.infer = self.infer.to("cuda:0")
+        elif cuda_device:
+            self.infer = self.infer.to("cuda:0")
 
         self.generator = torch.Generator(self.infer.device).manual_seed(seed)
 

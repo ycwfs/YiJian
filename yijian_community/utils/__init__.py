@@ -25,5 +25,6 @@ from .constants import (
     TEMPERATURE,
     TOP_P,
     TORCH_DTYPE,
+    NP
 )
 from .util_func import console
